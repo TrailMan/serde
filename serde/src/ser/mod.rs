@@ -346,6 +346,13 @@ pub trait Serializer: Sized {
     /// [`serialize_tuple`]: #tymethod.serialize_tuple
     type SerializeTuple: SerializeTuple<Ok = Self::Ok, Error = Self::Error>;
 
+
+    /// Type returned from [`serialize_tagged`] for serializing the content of
+    /// the tagged. Added by us
+    ///
+    /// [`serialize_tagged`]: #tymethod.serialize_tagged
+    type SerializeTagged: SerializeTagged<Ok = Self::Ok, Error = Self::Error>;
+
     /// Type returned from [`serialize_tuple_struct`] for serializing the
     /// content of the tuple struct.
     ///
@@ -1035,6 +1042,10 @@ pub trait Serializer: Sized {
     /// ```
     fn serialize_tuple(self, len: usize) -> Result<Self::SerializeTuple, Self::Error>;
 
+    ///Serialize Tagged value (added by us)
+    ///
+    fn serialize_tagged(self) -> Result<Self::SerializeTagged, Self::Error>;
+
     /// Begin to serialize a tuple struct like `struct Rgb(u8, u8, u8)`. This
     /// call must be followed by zero or more calls to `serialize_field`, then a
     /// call to `end`.
@@ -1606,6 +1617,20 @@ pub trait SerializeTuple {
 
     /// Finish serializing a tuple.
     fn end(self) -> Result<Self::Ok, Self::Error>;
+}
+
+///trait for tagged
+pub trait SerializeTagged {
+    /// Must match the `Ok` type of our `Serializer`.
+    type Ok;
+
+    /// Must match the `Error` type of our `Serializer`.
+    type Error: Error;
+
+    /// Serialize a tagged element.
+    fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
+        where
+            T: Serialize;
 }
 
 /// Returned from `Serializer::serialize_tuple_struct`.
