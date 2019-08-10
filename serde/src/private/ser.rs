@@ -58,6 +58,7 @@ enum Unsupported {
     Tuple,
     TupleStruct,
     Enum,
+    Tagged, // added by us
 }
 
 impl Display for Unsupported {
@@ -77,6 +78,7 @@ impl Display for Unsupported {
             Unsupported::Tuple => formatter.write_str("a tuple"),
             Unsupported::TupleStruct => formatter.write_str("a tuple struct"),
             Unsupported::Enum => formatter.write_str("an enum"),
+            Unsupported::Tagged => formatter.write_str("an tagged value"), // added by us
         }
     }
 }
@@ -105,6 +107,8 @@ where
     type SerializeTupleStruct = Impossible<S::Ok, S::Error>;
     type SerializeMap = S::SerializeMap;
     type SerializeStruct = S::SerializeStruct;
+
+    type SerializeTagged = S::SerializeTagged;
 
     #[cfg(not(any(feature = "std", feature = "alloc")))]
     type SerializeTupleVariant = Impossible<S::Ok, S::Error>;
@@ -238,6 +242,10 @@ where
 
     fn serialize_tuple(self, _: usize) -> Result<Self::SerializeTuple, Self::Error> {
         Err(self.bad_type(Unsupported::Tuple))
+    }
+
+    fn serialize_tagged(self) -> Result<Self::SerializeTagged, Self::Error> {
+        Err(self.bad_type(Unsupported::Tagged))
     }
 
     fn serialize_tuple_struct(
@@ -484,6 +492,7 @@ mod content {
 
         Seq(Vec<Content>),
         Tuple(Vec<Content>),
+        Tagged(u64, Content),
         TupleStruct(&'static str, Vec<Content>),
         TupleVariant(&'static str, u32, &'static str, Vec<Content>),
         Map(Vec<(Content, Content)>),
@@ -533,6 +542,11 @@ mod content {
                         try!(tuple.serialize_element(e));
                     }
                     tuple.end()
+                }
+                Content::Tagged(tag, element) =>{
+                    use ser::SerializeTagged;
+                    let mut ts = try!(serializer.serialize_tagged(tag));
+                    try!(ts.serialize_element);
                 }
                 Content::TupleStruct(n, ref fields) => {
                     use ser::SerializeTupleStruct;
@@ -1055,6 +1069,7 @@ where
     type SerializeStruct = FlatMapSerializeStruct<'a, M>;
     type SerializeTupleVariant = Impossible<Self::Ok, M::Error>;
     type SerializeStructVariant = FlatMapSerializeStructVariantAsMapValue<'a, M>;
+    type SerializeTagged = Impossible<Self::Ok, M::Error>;
 
     fn serialize_bool(self, _: bool) -> Result<Self::Ok, Self::Error> {
         Err(self.bad_type(Unsupported::Boolean))
@@ -1171,6 +1186,10 @@ where
 
     fn serialize_tuple(self, _: usize) -> Result<Self::SerializeTuple, Self::Error> {
         Err(self.bad_type(Unsupported::Tuple))
+    }
+
+    fn serialize_tagged(self) -> Result<Self::SerializeTagged, Self::Error> {
+        Err(self.bad_type(Unsupported::Tagged))
     }
 
     fn serialize_tuple_struct(

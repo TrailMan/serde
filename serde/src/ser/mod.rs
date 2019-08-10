@@ -1627,6 +1627,8 @@ pub trait SerializeTagged {
     /// Must match the `Error` type of our `Serializer`.
     type Error: Error;
 
+    fn set_tag<T: ?Sized>(&mut self, value: &T) ->Result<(), Self::Error>
+
     /// Serialize a tagged element.
     fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), Self::Error>
         where

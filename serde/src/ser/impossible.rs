@@ -4,7 +4,7 @@ use lib::*;
 
 use ser::{
     self, Serialize, SerializeMap, SerializeSeq, SerializeStruct, SerializeStructVariant,
-    SerializeTuple, SerializeTupleStruct, SerializeTupleVariant,
+    SerializeTuple, SerializeTupleStruct, SerializeTupleVariant,SerializeTagged,
 };
 
 /// Helper type for implementing a `Serializer` that does not support
@@ -64,6 +64,23 @@ pub struct Impossible<Ok, Error> {
 }
 
 enum Void {}
+
+impl<Ok, Error> SerializeTagged for Impossible<Ok, Error>
+    where
+        Error: ser::Error,
+{
+    type Ok = Ok;
+    type Error = Error;
+
+    fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), Error>
+        where
+            T: Serialize,
+    {
+        let _ = value;
+        match self.void {}
+    }
+
+}
 
 impl<Ok, Error> SerializeSeq for Impossible<Ok, Error>
 where
