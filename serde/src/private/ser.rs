@@ -492,7 +492,7 @@ mod content {
 
         Seq(Vec<Content>),
         Tuple(Vec<Content>),
-        Tagged(u64, Content),
+        Tagged(u64, &'static Content),
         TupleStruct(&'static str, Vec<Content>),
         TupleVariant(&'static str, u32, &'static str, Vec<Content>),
         Map(Vec<(Content, Content)>),
@@ -546,7 +546,8 @@ mod content {
                 Content::Tagged(tag, element) =>{
                     use ser::SerializeTagged;
                     let mut ts = try!(serializer.serialize_tagged(tag));
-                    try!(ts.serialize_element);
+                    try!(ts.set_tag(tag));
+                    try!(ts.serialize_element(element));
                 }
                 Content::TupleStruct(n, ref fields) => {
                     use ser::SerializeTupleStruct;

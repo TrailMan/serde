@@ -72,6 +72,12 @@ impl<Ok, Error> SerializeTagged for Impossible<Ok, Error>
     type Ok = Ok;
     type Error = Error;
 
+    fn set_tag<T: ?Sized>(&mut self, value: &T) ->Result<(), Self::Error>
+    {
+        let _ = value;
+        match self.void {}
+    }
+
     fn serialize_element<T: ?Sized>(&mut self, value: &T) -> Result<(), Error>
         where
             T: Serialize,
